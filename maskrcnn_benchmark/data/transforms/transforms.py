@@ -1,7 +1,6 @@
 # Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved.
 import random
 
-import torch
 import torchvision
 from torchvision.transforms import functional as F
 
@@ -73,6 +72,7 @@ class RandomHorizontalFlip(object):
             target = target.transpose(0)
         return image, target
 
+
 class RandomVerticalFlip(object):
     def __init__(self, prob=0.5):
         self.prob = prob
@@ -82,6 +82,7 @@ class RandomVerticalFlip(object):
             image = F.vflip(image)
             target = target.transpose(1)
         return image, target
+
 
 class ColorJitter(object):
     def __init__(self,
@@ -94,7 +95,8 @@ class ColorJitter(object):
             brightness=brightness,
             contrast=contrast,
             saturation=saturation,
-            hue=hue,)
+            hue=hue
+        )
 
     def __call__(self, image, target):
         image = self.color_jitter(image)
@@ -103,7 +105,7 @@ class ColorJitter(object):
 
 class ToTensor(object):
     def __call__(self, image, target):
-        return F.to_tensor(image), target
+        return F.to_tensor(image).float(), target
 
 
 class Normalize(object):
@@ -114,7 +116,7 @@ class Normalize(object):
 
     def __call__(self, image, target=None):
         if self.to_bgr255:
-            image = image[[2, 1, 0]] * 255
+            image = image.permute(2, 1, 0) * 255
         image = F.normalize(image, mean=self.mean, std=self.std)
         if target is None:
             return image

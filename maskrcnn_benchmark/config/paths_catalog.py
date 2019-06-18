@@ -31,6 +31,14 @@ class DatasetCatalog(object):
             "img_dir": "coco/val2014",
             "ann_file": "coco/annotations/instances_valminusminival2014.json"
         },
+        "coco_grayscale_train": {
+            "img_dir": "coco/train2014_grayscale",
+            "ann_file": "coco/annotations/instances_train2014_grayscale.json"
+        },
+        "coco_grayscale_val": {
+            "img_dir": "coco/val2014",
+            "ann_file": "coco/annotations/instances_val2014_grayscale.json"
+        },
         "keypoints_coco_2014_train": {
             "img_dir": "coco/train2014",
             "ann_file": "coco/annotations/person_keypoints_train2014.json",
@@ -114,6 +122,7 @@ class DatasetCatalog(object):
             args = dict(
                 root=os.path.join(data_dir, attrs["img_dir"]),
                 ann_file=os.path.join(data_dir, attrs["ann_file"]),
+                grayscale=bool("grayscale" in name)
             )
             return dict(
                 factory="COCODataset",

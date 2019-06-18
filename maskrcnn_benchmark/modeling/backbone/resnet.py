@@ -18,7 +18,6 @@ Custom implementations may be written in user code and hooked in via the
 """
 from collections import namedtuple
 
-import torch
 import torch.nn.functional as F
 from torch import nn
 
@@ -27,7 +26,6 @@ from maskrcnn_benchmark.layers import Conv2d
 from maskrcnn_benchmark.layers import DFConv2d
 from maskrcnn_benchmark.modeling.make_layers import group_norm
 from maskrcnn_benchmark.utils.registry import Registry
-
 
 # ResNet stage specification
 StageSpec = namedtuple(
@@ -77,6 +75,7 @@ ResNet152FPNStagesTo5 = tuple(
     StageSpec(index=i, block_count=c, return_features=r)
     for (i, c, r) in ((1, 3, True), (2, 8, True), (3, 36, True), (4, 3, True))
 )
+
 
 class ResNet(nn.Module):
     def __init__(self, cfg):
@@ -261,13 +260,13 @@ class Bottleneck(nn.Module):
                 ),
                 norm_func(out_channels),
             )
-            for modules in [self.downsample,]:
+            for modules in [self.downsample, ]:
                 for l in modules.modules():
                     if isinstance(l, Conv2d):
                         nn.init.kaiming_uniform_(l.weight, a=1)
 
         if dilation > 1:
-            stride = 1 # reset to be 1
+            stride = 1  # reset to be 1
 
         # The original MSRA ResNet models have stride in the first 1x1 conv
         # The subsequent fb.torch.resnet and Caffe2 ResNe[X]t implementations have
@@ -318,7 +317,7 @@ class Bottleneck(nn.Module):
         )
         self.bn3 = norm_func(out_channels)
 
-        for l in [self.conv1, self.conv3,]:
+        for l in [self.conv1, self.conv3, ]:
             nn.init.kaiming_uniform_(l.weight, a=1)
 
     def forward(self, x):
@@ -348,14 +347,15 @@ class BaseStem(nn.Module):
     def __init__(self, cfg, norm_func):
         super(BaseStem, self).__init__()
 
+        in_channels = cfg.MODEL.RESNETS.STEM_IN_CHANNELS
         out_channels = cfg.MODEL.RESNETS.STEM_OUT_CHANNELS
 
         self.conv1 = Conv2d(
-            3, out_channels, kernel_size=7, stride=2, padding=3, bias=False
+            in_channels, out_channels, kernel_size=7, stride=2, padding=3, bias=False
         )
         self.bn1 = norm_func(out_channels)
 
-        for l in [self.conv1,]:
+        for l in [self.conv1, ]:
             nn.init.kaiming_uniform_(l.weight, a=1)
 
     def forward(self, x):

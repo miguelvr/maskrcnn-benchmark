@@ -1,11 +1,13 @@
 # Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved.
+import os
+
 import torch
 import torchvision
+from PIL import Image
 
 from maskrcnn_benchmark.structures.bounding_box import BoxList
-from maskrcnn_benchmark.structures.segmentation_mask import SegmentationMask
 from maskrcnn_benchmark.structures.keypoint import PersonKeypoints
-
+from maskrcnn_benchmark.structures.segmentation_mask import SegmentationMask
 
 min_keypoints_per_image = 10
 
@@ -37,9 +39,13 @@ def has_valid_annotation(anno):
 
 
 class COCODataset(torchvision.datasets.coco.CocoDetection):
-    def __init__(
-        self, ann_file, root, remove_images_without_annotations, transforms=None
-    ):
+    def __init__(self,
+                 ann_file,
+                 root,
+                 remove_images_without_annotations,
+                 transforms=None,
+                 grayscale=False):
+
         super(COCODataset, self).__init__(root, ann_file)
         # sort indices for reproducible results
         self.ids = sorted(self.ids)
@@ -64,9 +70,20 @@ class COCODataset(torchvision.datasets.coco.CocoDetection):
         }
         self.id_to_img_map = {k: v for k, v in enumerate(self.ids)}
         self._transforms = transforms
+        self.grayscale = grayscale
 
     def __getitem__(self, idx):
-        img, anno = super(COCODataset, self).__getitem__(idx)
+        coco = self.coco
+        img_id = self.ids[idx]
+        ann_ids = coco.getAnnIds(imgIds=img_id)
+        anno = coco.loadAnns(ann_ids)
+
+        path = coco.loadImgs(img_id)[0]['file_name']
+
+        img = Image.open(os.path.join(self.root, path))
+
+        if not self.grayscale:
+            img = img.convert("RGB")
 
         # filter crowd annotations
         # TODO might be better to add an extra field
